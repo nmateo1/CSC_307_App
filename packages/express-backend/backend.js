@@ -9,11 +9,6 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-app.listen(port, () => {
-  console.log(
-    `Example app listening at http://localhost:${port}`
-  );
-});
 
 const users = {
   users_list: [
@@ -49,18 +44,31 @@ const users = {
 //   res.send(users);
 // });
 
-const findUserByName = (name) => {
-  return users["users_list"].filter(
-    (user) => user["name"] === name
-  );
-};
+// const findUserByName = (name) => {
+//   return users["users_list"].filter(
+//     (user) => user["name"] === name
+//   );
+// };
+// Function to find users by name and job
+const findUsersByNameAndJob = (name, job) =>
+  users.users_list.filter((user) => user.name === name && user.job === job);
 
+// app.get("/users", (req, res) => {
+//   const name = req.query.name;
+//   if (name != undefined) {
+//     let result = findUserByName(name);
+//     result = { users_list: result };
+//     res.send(result);
+//   } else {
+//     res.send(users);
+//   }
+// });
+// Route to handle GET users by name and job
 app.get("/users", (req, res) => {
-  const name = req.query.name;
-  if (name != undefined) {
-    let result = findUserByName(name);
-    result = { users_list: result };
-    res.send(result);
+  const { name, job } = req.query;
+  if (name && job) {
+    const result = findUsersByNameAndJob(name, job);
+    res.send({ users_list: result });
   } else {
     res.send(users);
   }
@@ -88,4 +96,35 @@ app.post("/users", (req, res) => {
   const userToAdd = req.body;
   addUser(userToAdd);
   res.send();
+});
+
+// Function to delete a user by ID
+const deleteUserById = (id) => {
+  const index = users.users_list.findIndex(user => user.id === id);
+  if (index !== -1) {
+    users.users_list.splice(index, 1);
+    return true; // User deleted successfully
+  }
+  return false; // User not found
+};
+
+// Route to handle DELETE user by ID from /users endpoint
+app.delete("/users", (req, res) => {
+  const userIdObj = req.body;
+  const id = userIdObj.id; // Extract user ID from request body
+  if (!id) {
+    return res.status(400).send("User ID not provided."); // Return bad request if ID is not provided
+  }
+  if (deleteUserById(id)) {
+    res.send("User deleted successfully.");
+  } else {
+    res.status(404).send("User not found.");
+  }
+});
+
+
+app.listen(port, () => {
+  console.log(
+    `Example app listening at http://localhost:${port}`
+  );
 });
